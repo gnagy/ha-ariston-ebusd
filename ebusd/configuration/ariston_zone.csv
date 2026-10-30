@@ -1,0 +1,36 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Value lists are the installation manuals' own wording: thermoregulation menu 4.2.1 and heat request mode
+# menu 4.2.9 (Nimbus Plus Net manual p. 62; Zone Manager manual p. 18). See wiki ariston-menu.
+# Zone 1 settings. 200e/200f rows catch the register's own answer. 2020 rows catch the boiler's rotating
+# settings dump, keyed on the first register of a telegram whose layout was stable from 2025-10 to 2026-08:
+#   6171 5e01 6471 9cff 6571 2602 6671 3403
+#   0520 01 602b c003 7426 0000 6071 8a02
+#   6771 5e01 6971 2c01 6a71 6400 6b71 5e01
+#   6c71 3200 c079 04 c279 0a c979 06
+m,ariston_z1,z1_heat_setpoint_temp,Heat setpoint temperature,,fe,200f,6996,,s,UIN,10,°C
+m,ariston_z1,z1_flow_temp_fixed,Fixed flow temperature,,fe,200e,6571,,s,UIN,10,°C
+m,ariston_z1,z1_curve_offset,Heating curve offset,,fe,200e,6471,,s,SIN,10,°C
+# The Sensys's mode, as its menu shows it. Read off the bus on 2026-10-14 by cycling the Sensys: 0 off, 2 manual, 3 time
+# program; the boiler reports the range 0-3. 1 is accepted and kept, and the Sensys shows "-" for it: meaning unknown.
+# The names in the manuals this was first labelled from (standard, time programs excluded, forcing) did not fit.
+m,ariston_z1,z1_request_mode,Zone mode,,fe,200f,c679,,s,UCH,0=off;1=unknown;2=manual;3=time program,
+m,ariston_z1,z1_flow_temp_min,Minimum flow temperature,,fe,2020,6171,,s,UIN,10,°C
+m,ariston_z1,z1_flow_temp_max,Maximum flow temperature,,fe,2020,0520,,s,IGN:11,,,,,s,UIN,10,°C
+m,ariston_z1,z1_curve_slope,Heating curve slope,,fe,2020,6771,,s,IGN:8,,,,,s,UIN,100,
+m,ariston_z1,z1_regulation,,,fe,2020,6c71,,s,IGN:4,,,,type,s,UCH,0=fixed flow temperature;1=basic thermoregulation;2=room temp only;3=outdoor temp only;4=room and outdoor temp,,Thermoregulation type,,s,IGN:2,,,,room_influence,s,UCH,,,Thermoregulation room influence
+# Zone 1's heat request and the flow setpoint the boiler computes for it, Sensys menu 4.3.4 and 4.3.8 (placed
+# 2026-09-19, wiki ariston-register-inventory). The boiler (37) broadcasts 0191 on 200f about every 5 min, value
+# then a byte left unread. 6197 is broadcast only when asked, but the boiler answers an addressed 2001 read: value,
+# then min and max, skipped. The setpoint is the end of the zone's regulation chain and acts only while the zone
+# requests heat; zone 1's reads 65, its maximum, whenever the zone 1 room reads above 25.5 °C (ariston-zone-thermostats).
+m,ariston_z1,z1_heat_request,Heat request,,fe,2010,0c19,,s,IGN:12,,,,,s,UCH,0=off;1=on,
+r5,ariston_z1,z1_flow_temp_setpoint,Flow temperature setpoint,,3c,2001,6197,,s,UIN,10,°C,,,s,IGN:4
+# Read-back rows for the settings that reach Home Assistant only in the boiler's 30-minute dump (or never): unpolled,
+# read on demand when something publishes to .../get. Same names as the passive rows, so they share the state topic.
+r,ariston_z1,z1_curve_offset,Heating curve offset,,3c,2000,6471,,s,IGN:1,,,,,s,SIN,10,°C
+r,ariston_z1,z1_curve_slope,Heating curve slope,,3c,2000,6a71,,s,IGN:1,,,,,s,UIN,100,
+r,ariston_z1,z1_room_influence,Room influence,,3c,2000,c279,,s,IGN:1,,,,,s,UCH,,
+r,ariston_z1,z1_day_temp,Day temperature,,3c,2000,6271,,s,IGN:1,,,,,s,UIN,10,°C
+# Zone 1's thermoregulation type on its own topic, for the select in ariston_climate_zone1.yaml: polled rarely, and read on demand
+# after a set. (z1_regulation above is a two-field message decoded from the settings dump, every 30 minutes.)
+r9,ariston_z1,z1_thermoreg_type,Thermoregulation type,,3c,2000,c079,,s,IGN:1,,,,,s,UCH,0=fixed flow temperature;1=basic thermoregulation;2=room temp only;3=outdoor temp only;4=room and outdoor temp,

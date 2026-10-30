@@ -1,0 +1,12 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Write rows: the allow-list of what Home Assistant may set. The circuit "cmd" does not match filter-circuit, so ebusd
+# never announces these to Home Assistant; the entities are defined by hand in the ariston_*.yaml packages.
+w,cmd,winter_mode,Winter mode,,fe,2020,0120,,s,UCH,0=off;1=on,,
+w,cmd,z1_day_temp,Day temperature,,fe,2020,6271,,s,UIN,10,°C
+w,cmd,z1_curve_offset,Heating curve offset,,fe,2020,6471,,s,SIN,10,°C
+w,cmd,z1_curve_slope,Heating curve slope,,fe,2020,6a71,,s,UIN,100,
+w,cmd,z1_room_influence,Room influence,,fe,2020,c279,,s,UCH,,
+w,cmd,auto_mode,Automatic thermoregulation,,fe,2020,0520,,s,UCH,0=off;1=on,,
+w,cmd,sanitary_temp_comfort,DHW comfort temperature,,fe,2020,6126,,s,UIN,10,°C
+w,cmd,dhw_status,DHW heating,,fe,2020,0220,,s,UCH,0=off;1=on,,
+w,cmd,z1_thermoreg_type,Thermoregulation type,,fe,2020,c079,,s,UCH,0=fixed flow temperature;1=basic thermoregulation;2=room temp only;3=outdoor temp only;4=room and outdoor temp,,

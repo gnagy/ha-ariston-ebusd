@@ -1,0 +1,127 @@
+# Zone 1: its climate, the room temperature that feeds it, and its heating-curve settings.
+#
+# Reads from ebusd:    ebusd/ariston/winter_mode, boiler_status;  ebusd/ariston_z1/z1_day_temp, z1_room_temp,
+#                      z1_curve_offset, z1_curve_slope, z1_room_influence, z1_thermoreg_type
+# Writes to ebusd:     ebusd/cmd/winter_mode/set (the heating season is the boiler's, not the zone's),
+#                      ebusd/cmd/z1_day_temp/set, z1_curve_offset, z1_curve_slope, z1_room_influence, z1_thermoreg_type
+# Re-read after a set: the map in ariston_boiler.yaml. Design: wiki specs/2026-10-14-ariston-controls.
+#
+# The Z1 thermostat sends its room temperature as an 8-bit number in tenths of a degree, so it wraps at 25.6 degrees: a
+# room at 26.2 arrives as 0.6 (wiki ariston-zone-thermostats). Below 10 degrees a reading is therefore 25.6 too low.
+# The boiler still sees the wrapped value; this only corrects what the tile shows.
+#
+# Optional: the correction is for a thermostat that wraps, as an older Ariston zone 1 thermostat did here. If yours
+# reports the full value, set current_temperature_template to "{{ value_json['0'].value }}" and delete the template
+# block at the end, which exists only to carry the corrected value.
+mqtt:
+  climate:
+    - name: "Zone 1"
+      unique_id: ebusd_ariston_zone_1_climate
+      modes: ["off", "heat"]
+      mode_state_topic: "ebusd/ariston/winter_mode"
+      mode_state_template: "{{ 'heat' if value_json['0'].value == 'on' else 'off' }}"
+      mode_command_topic: "ebusd/cmd/winter_mode/set"
+      mode_command_template: "{{ 'on' if value == 'heat' else 'off' }}"
+      temperature_state_topic: "ebusd/ariston_z1/z1_day_temp"
+      temperature_state_template: "{{ value_json['0'].value }}"
+      temperature_command_topic: "ebusd/cmd/z1_day_temp/set"
+      current_temperature_topic: "ebusd/ariston_z1/z1_room_temp"
+      current_temperature_template: >-
+        {% set t = value_json['0'].value | float(-99) %}
+        {{ (t + 25.6) | round(1) if 0 <= t < 10 else (t if t >= 10 else 'None') }}
+      action_topic: "ebusd/ariston/boiler_status"
+      action_template: "{{ 'heating' if value_json['0'].value == 'heating' else 'idle' }}"
+      min_temp: 15
+      max_temp: 25
+      temp_step: 0.5
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+  number:
+    - name: "Curve offset"
+      unique_id: ariston_controls_z1_curve_offset
+      default_entity_id: number.heating_z1_curve_offset
+      device: {identifiers: [ebusd_ariston_z1]}
+      state_topic: "ebusd/ariston_z1/z1_curve_offset"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z1_curve_offset/set"
+      min: -14
+      max: 14
+      step: 0.5
+      unit_of_measurement: "°C"
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+    - name: "Curve slope"
+      unique_id: ariston_controls_z1_curve_slope
+      default_entity_id: number.heating_z1_curve_slope
+      device: {identifiers: [ebusd_ariston_z1]}
+      state_topic: "ebusd/ariston_z1/z1_curve_slope"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z1_curve_slope/set"
+      min: 1.0
+      max: 3.5
+      step: 0.05
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+    - name: "Room influence"
+      unique_id: ariston_controls_z1_room_influence
+      default_entity_id: number.heating_z1_room_influence
+      device: {identifiers: [ebusd_ariston_z1]}
+      state_topic: "ebusd/ariston_z1/z1_room_influence"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z1_room_influence/set"
+      min: 0
+      max: 20
+      step: 1
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+  select:
+    - name: "Thermoregulation"
+      unique_id: ariston_controls_z1_thermoreg_type
+      default_entity_id: select.heating_z1_thermoregulation
+      device: {identifiers: [ebusd_ariston_z1]}
+      # All five types the boiler has (Genus One installation manual, parameter 4.2.1). The names are the value list of the
+      # write row in ariston_cmd.csv. Fixed flow ignores the curve and the room and uses the zone's fixed flow temperature.
+      options:
+        - "fixed flow temperature"
+        - "basic thermoregulation"
+        - "room temp only"
+        - "outdoor temp only"
+        - "room and outdoor temp"
+      state_topic: "ebusd/ariston_z1/z1_thermoreg_type"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z1_thermoreg_type/set"
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+template:
+  - triggers:
+      - trigger: state
+        entity_id: sensor.ebusd_ariston_z1_room_temp
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.to_state.state | float(-99) >= 0 }}"
+    sensor:
+      - name: "Zone 1 Room Temperature"
+        unique_id: ebusd_ariston_z1_room_temp_filtered
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >-
+          {% set t = trigger.to_state.state | float %}
+          {{ (t + 25.6) | round(1) if t < 10 else t }}

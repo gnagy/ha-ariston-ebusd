@@ -1,0 +1,408 @@
+# The Heating view: one view of a sections dashboard. To use it, open a dashboard, add a view, switch it to the raw
+# configuration editor and paste this file. Zone 2 is the last section, and the Ariston WiFi module card is in the
+# second: delete either if your boiler has no second zone or no WiFi module.
+icon: mdi:water-boiler
+max_columns: 4
+path: heating
+sections:
+- cards:
+  - heading: Heating temperatures, 1 hour
+    heading_style: title
+    icon: mdi:thermometer
+    type: heading
+  - entities:
+    - entity: sensor.ebusd_ariston_heating_flow_temp_setpoint
+      name: Flow target
+    - entity: sensor.ebusd_ariston_heating_temp_out
+      name: Flow
+    - entity: sensor.ebusd_ariston_heating_temp_return
+      name: Return
+    - entity: sensor.ebusd_ariston_boiler_gas_power
+      name: Gas power
+    - entity: sensor.ebusd_ariston_boiler_status
+      name: Boiler status
+    grid_options:
+      columns: full
+    hours_to_show: 1
+    type: history-graph
+  - entities:
+    - entity: sensor.ebusd_ariston_heating_flow_temp_setpoint
+      name: Flow target
+    - entity: sensor.ebusd_ariston_heating_temp_out
+      name: Flow
+    - entity: sensor.ebusd_ariston_heating_temp_return
+      name: Return
+    - entity: sensor.ebusd_ariston_ext_temp
+      name: Outside
+    - entity: sensor.ebusd_ariston_antifreeze_temp
+      name: Antifreeze threshold
+    grid_options:
+      columns: full
+    state_color: true
+    type: entities
+  - heading: Overview
+    heading_style: title
+    icon: mdi:water-boiler
+    type: heading
+  - entity: binary_sensor.boiler_fault
+    grid_options:
+      columns: full
+    name: Boiler fault
+    type: tile
+  - card:
+      content: "{%- set errs = state_attr('binary_sensor.boiler_fault', 'errors') or [] -%}\n{%- set last = states('sensor.boiler_last_error')\
+        \ -%}\n{%- set last_code = state_attr('sensor.boiler_last_error', 'code') -%}\n{%- set kinds = {'warning': '⚠️ Warning:\
+        \ the boiler keeps running',\n                 'safety_shutoff': '⛔ Safety shutdown: clears once the cause is gone',\n\
+        \                 'lockout': '\U0001F512 Lockout: press RESET on the boiler',\n                 'unknown': '❔ Kind\
+        \ unknown'} -%}\n{%- for e in errs %}\n### {{ e.code }} · {{ e.description }}\n{{ kinds.get(e.kind, e.kind) }}<br>\n\
+        {%- if e.code == last_code and last not in ['unknown', 'unavailable'] %}\nRaised {{ as_timestamp(last) | timestamp_custom('%Y-%m-%d\
+        \ %H:%M') }} ({{ time_since(as_datetime(last)) }} ago, by the boiler's clock)\n{%- else %}\nOn in HA since {{ as_timestamp(e.since)\
+        \ | timestamp_custom('%Y-%m-%d %H:%M') }} ({{ time_since(as_datetime(e.since)) }})\n{%- endif %}\n{%- endfor %}"
+      type: markdown
+    conditions:
+    - condition: state
+      entity: binary_sensor.boiler_fault
+      state: 'on'
+    grid_options:
+      columns: full
+    type: conditional
+  - cards:
+    - entity: sensor.ebusd_ariston_boiler_status
+      name: Status
+      type: tile
+    - entity: sensor.ebusd_ariston_ext_temp
+      name: Outside
+      type: tile
+    columns: 2
+    grid_options:
+      columns: full
+    square: false
+    type: grid
+  - heading: Boiler state
+    heading_style: title
+    icon: mdi:fire
+    type: heading
+  - entities:
+    - entity: sensor.ebusd_ariston_boiler_status
+      name: Status
+    - entity: binary_sensor.ebusd_ariston_boiler_flame
+      name: Flame
+    - entity: switch.heating_winter_mode
+      name: Winter mode (heating season)
+    - entity: switch.heating_auto_thermoregulation
+      name: Auto mode (thermoregulation)
+    - entity: sensor.ebusd_ariston_boiler_pressure
+      name: Heating circuit pressure
+    - entity: sensor.ebusd_ariston_boiler_warning_pressure
+      name: Warning pressure
+    grid_options:
+      columns: full
+    state_color: true
+    type: entities
+  - heading: Burner
+    heading_style: title
+    icon: mdi:fire-circle
+    type: heading
+  - entities:
+    - entity: binary_sensor.ebusd_ariston_boiler_flame
+      name: Flame
+    - entity: sensor.ebusd_ariston_boiler_gas_power
+      name: Gas power
+    - entity: sensor.ebusd_ariston_boiler_diverter_position
+      name: Diverter valve
+    - entity: sensor.ebusd_ariston_boiler_fan_speed
+      name: Fan speed
+    - entity: sensor.ebusd_ariston_boiler_pump_modulation
+      name: Pump modulation
+    - entity: sensor.ebusd_ariston_boiler_pump_speed
+      name: Pump speed
+    - entity: sensor.ebusd_ariston_boiler_combustion_control
+      name: Combustion control (unconfirmed)
+    grid_options:
+      columns: full
+    state_color: true
+    type: entities
+  - entities:
+    - entity: binary_sensor.ebusd_ariston_boiler_flame
+      name: Flame
+    - entity: sensor.ebusd_ariston_boiler_gas_power
+      name: Gas power
+    hours_to_show: 24
+    title: Burner activity
+    type: history-graph
+  - entities:
+    - entity: sensor.ebusd_ariston_boiler_pump_modulation
+      name: Pump modulation
+    - entity: sensor.ebusd_ariston_boiler_pump_speed
+      name: Pump speed
+    - entity: sensor.ebusd_ariston_boiler_combustion_control
+      name: Combustion control
+    hours_to_show: 24
+    title: Pump and combustion control
+    type: history-graph
+  - heading: Counters
+    heading_style: title
+    icon: mdi:counter
+    type: heading
+  - entities:
+    - entity: sensor.ebusd_ariston_hours_burner_on
+      name: Burner hours
+    - entity: sensor.ebusd_ariston_boiler_life_time
+      name: Boiler life time
+    - entity: sensor.ebusd_ariston_boiler_ignition_cycles
+      name: Ignition cycles
+    - entity: sensor.ebusd_ariston_boiler_circulation_cycles
+      name: Circulation cycles
+    - entity: sensor.ebusd_ariston_boiler_diverter_cycles
+      name: Diverter valve cycles
+    - entity: sensor.ebusd_ariston_hours_burner_on_dhw
+      name: DHW burner hours
+    - entity: sensor.ebusd_ariston_boiler_flame_faults
+      name: Flame faults
+    - entity: sensor.ebusd_ariston_boiler_heat_request_duration
+      name: Heat request duration
+    - entity: sensor.ebusd_ariston_hours_circulator_on
+      name: Circulator on time
+    - entity: sensor.ebusd_ariston_hours_fan_on
+      name: Fan on time
+    - entity: sensor.ebusd_ariston_boiler_fan_cycles
+      name: Fan cycles
+    - entity: sensor.ebusd_ariston_boiler_flame_detections_ch
+      name: CH flame detections
+    - entity: sensor.ebusd_ariston_boiler_flame_detections_dhw
+      name: DHW flame detections
+    grid_options:
+      columns: full
+    type: entities
+  - chart_type: bar
+    days_to_show: 120
+    entities:
+    - sensor.ebusd_ariston_hours_burner_on
+    period: week
+    stat_types:
+    - change
+    title: Burner hours per week
+    type: statistics-graph
+  type: grid
+- cards:
+  - heading: Temperatures, 24 hours
+    heading_style: title
+    icon: mdi:thermometer
+    type: heading
+  - entities:
+    - entity: sensor.ebusd_ariston_heating_flow_temp_setpoint
+      name: Flow target
+    - entity: sensor.ebusd_ariston_heating_temp_out
+      name: Flow
+    - entity: sensor.ebusd_ariston_heating_temp_return
+      name: Return
+    grid_options:
+      columns: full
+    hours_to_show: 24
+    type: history-graph
+  - heading: Hot water
+    heading_style: title
+    icon: mdi:water-thermometer
+    type: heading
+  - entities:
+    - entity: switch.heating_hot_water
+      name: Hot water enabled
+    - entity: number.heating_hot_water_temperature
+      name: Comfort temperature
+    - entity: sensor.ebusd_ariston_dhw_temp
+      name: Tank temperature
+    - entity: sensor.ebusd_ariston_comfort_mode
+      name: Comfort mode
+    - entity: sensor.ebusd_ariston_sanitary_temp_reduced
+      name: Reduced temperature
+    grid_options:
+      columns: full
+    state_color: true
+    type: entities
+  - heading: Error log
+    heading_style: title
+    icon: mdi:alert-circle-outline
+    type: heading
+  - entities:
+    - entity: sensor.boiler_last_error
+      format: datetime
+      name: Last error, by the boiler's clock
+    - attribute: code
+      entity: sensor.boiler_last_error
+      name: Code
+      type: attribute
+    - attribute: description
+      entity: sensor.boiler_last_error
+      name: Description
+      type: attribute
+    grid_options:
+      columns: full
+    type: entities
+  - grid_options:
+      columns: full
+    hours_to_show: 168
+    target:
+      entity_id:
+      - binary_sensor.boiler_fault
+    title: Last 7 days
+    type: logbook
+  - heading: eBUS gateway
+    heading_style: title
+    icon: mdi:lan-connect
+    type: heading
+  - entities:
+    - entity: binary_sensor.ebusd_global_running
+      name: Running
+    - entity: binary_sensor.ebusd_global_signal
+      name: Signal
+    - entity: sensor.ebusd_global_uptime
+      name: Uptime
+    - entity: update.ebusd_update
+      name: Add-on update
+    grid_options:
+      columns: full
+    state_color: true
+    title: ebusd
+    type: entities
+  - heading: Ariston WiFi module
+    heading_style: title
+    icon: mdi:wifi
+    type: heading
+  - entities:
+    - entity: sensor.ebusd_ariston_wifi_state_connection
+      name: Connection
+    - entity: binary_sensor.ebusd_ariston_wifi_config_wifi
+      name: WiFi
+    - entity: binary_sensor.ebusd_ariston_wifi_config_ntp
+      name: NTP
+    - entity: sensor.ebusd_ariston_wifi_state_sw_update
+      name: Software update
+    grid_options:
+      columns: full
+    state_color: true
+    type: entities
+  type: grid
+- cards:
+  - heading: Heating zone 1
+    heading_style: title
+    icon: mdi:home-thermometer
+    type: heading
+  - entity: climate.zone_1
+    features:
+    - hvac_modes:
+      - heat
+      - 'off'
+      type: climate-hvac-modes
+    - type: target-temperature
+    grid_options:
+      columns: full
+    name: Zone 1
+    type: tile
+  - entities:
+    - entity: sensor.ebusd_ariston_z1_room_temp
+      name: Room temperature
+      secondary_info: last-changed
+    - entity: sensor.ebusd_ariston_z1_heat_setpoint_temp
+      name: Heat setpoint
+    - entity: sensor.ebusd_ariston_z1_day_temp
+      name: Day temperature (set on the tile above)
+    - entity: sensor.ebusd_ariston_z1_night_temp
+      name: Night temperature
+    - entity: sensor.ebusd_ariston_z1_request_mode
+      name: Zone mode
+    grid_options:
+      columns: full
+    state_color: true
+    title: Room
+    type: entities
+  - entities:
+    - entity: binary_sensor.ebusd_ariston_z1_heat_request
+      name: Heat request
+      secondary_info: last-changed
+    - entity: sensor.ebusd_ariston_z1_flow_temp_setpoint
+      name: Flow setpoint (computed)
+    - entity: select.heating_z1_thermoregulation
+      name: Thermoregulation
+    - entity: sensor.ebusd_ariston_z2_flow_temp_limits_z1_temp_range
+      name: Temperature range
+    - entity: number.heating_z1_room_influence
+      name: Room influence
+    - entity: sensor.ebusd_ariston_z1_flow_temp_fixed
+      name: Fixed flow temperature
+    - entity: number.heating_z1_curve_slope
+      name: Curve slope
+    - entity: number.heating_z1_curve_offset
+      name: Curve offset
+    - entity: sensor.ebusd_ariston_z1_flow_temp_min
+      name: Minimum flow temperature
+    - entity: sensor.ebusd_ariston_z1_flow_temp_max
+      name: Maximum flow temperature
+    grid_options:
+      columns: full
+    state_color: true
+    title: Flow and curve
+    type: entities
+  type: grid
+- cards:
+  - heading: Heating zone 2
+    heading_style: title
+    icon: mdi:home-thermometer-outline
+    type: heading
+  - entity: climate.zone_2
+    features:
+    - hvac_modes:
+      - heat
+      - 'off'
+      type: climate-hvac-modes
+    - type: target-temperature
+    grid_options:
+      columns: full
+    name: Zone 2
+    type: tile
+  - entities:
+    - entity: sensor.ebusd_ariston_z2_room_temp
+      name: Room temperature
+      secondary_info: last-changed
+    - entity: sensor.ebusd_ariston_z2_heat_setpoint_temp
+      name: Heat setpoint
+    - entity: sensor.ebusd_ariston_z2_day_temp
+      name: Day temperature (set on the tile above)
+    - entity: sensor.ebusd_ariston_z2_night_temp
+      name: Night temperature
+    - entity: sensor.ebusd_ariston_z2_request_mode
+      name: Zone mode
+    grid_options:
+      columns: full
+    state_color: true
+    title: Room
+    type: entities
+  - entities:
+    - entity: binary_sensor.ebusd_ariston_z2_heat_request
+      name: Heat request
+      secondary_info: last-changed
+    - entity: sensor.ebusd_ariston_z2_flow_temp_setpoint
+      name: Flow setpoint (computed)
+    - entity: select.heating_z2_thermoregulation
+      name: Thermoregulation
+    - entity: sensor.ebusd_ariston_z2_regulation_temp_range
+      name: Temperature range
+    - entity: number.heating_z2_room_influence
+      name: Room influence
+    - entity: sensor.ebusd_ariston_z2_flow_temp_fixed
+      name: Fixed flow temperature
+    - entity: number.heating_z2_curve_slope
+      name: Curve slope
+    - entity: number.heating_z2_curve_offset
+      name: Curve offset
+    - entity: sensor.ebusd_ariston_z2_flow_temp_limits_min
+      name: Minimum flow temperature
+    - entity: sensor.ebusd_ariston_z2_flow_temp_limits_max
+      name: Maximum flow temperature
+    grid_options:
+      columns: full
+    state_color: true
+    title: Flow and curve
+    type: entities
+  type: grid
+title: Heating
+type: sections

@@ -1,0 +1,22 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Boiler broadcasts (fe). Comments are the entity names in Home Assistant: sentence case, no commas.
+# Names kept from the 2022 configuration where Home Assistant has their history.
+m,ariston,ext_temp,Outdoor temperature,,fe,200f,7647,,s,SIN,10,°C
+m,ariston,boiler_status,Status,,fe,2010,c04b,,s,UCH,1=standby;2=heating;3=water;4=heating hot water tank;5=circulating;24=comfort;51=low water pressure;52=no flame
+m,ariston,antifreeze_temp,Antifreeze temperature,,fe,200e,6426,,s,UIN,10,°C
+m,ariston,winter_mode,Winter mode,,fe,200f,0120,,s,UCH,0=off;1=on
+m,ariston,auto_mode,Auto mode,,fe,200f,0520,,s,UCH,0=off;1=on
+m,ariston,comfort_mode,DHW comfort mode,,fe,200f,c028,,s,UCH,0=disabled;1=time based;2=always active
+m,ariston,sanitary_temp_comfort,DHW comfort temperature,,fe,200e,6126,,s,UIN,10,°C
+m,ariston,sanitary_temp_reduced,DHW reduced temperature,,fe,200e,6226,,s,UIN,10,°C
+m,ariston,dhw_status,DHW heating,,fe,200e,0220,,s,UCH,0=off;1=on
+# Zone 1 broadcasts, on the zone 1 device.
+m,ariston_z1,z1_room_temp,Room temperature,,fe,200f,7118,,s,SIN,10,°C
+m,ariston_z1,z1_day_temp,Day temperature,,fe,200e,6271,,s,UIN,10,°C
+m,ariston_z1,z1_night_temp,Night temperature,,fe,200e,6371,,s,UIN,10,°C
+# Read-back rows for the controls in the ariston_*.yaml packages: unpolled, read on demand when a command is
+# published to ebusd/cmd/<name>/set and the package asks for a re-read (.../get). Same names as the passive rows.
+r,ariston,winter_mode,Winter mode,,3c,2000,0120,,s,IGN:1,,,,,s,UCH,0=off;1=on,
+r,ariston,auto_mode,Auto mode,,3c,2000,0520,,s,IGN:1,,,,,s,UCH,0=off;1=on,
+r,ariston,dhw_status,DHW heating,,3c,2000,0220,,s,IGN:1,,,,,s,UCH,0=off;1=on,
+r,ariston,sanitary_temp_comfort,DHW comfort temperature,,3c,2000,6126,,s,IGN:1,,,,,s,UIN,10,°C

@@ -1,0 +1,68 @@
+# The boiler-wide controls: the heating season (winter mode) and AUTO, and the automation every other package relies on
+# to re-read a setting after it was written.
+#
+# Reads from ebusd:    ebusd/ariston/winter_mode, auto_mode
+# Writes to ebusd:     ebusd/cmd/winter_mode/set, ebusd/cmd/auto_mode/set   (the write rows in configuration/ariston_cmd.csv)
+# Refresh from ebusd:  ebusd/<circuit>/<name>/get for every command          (the r rows in ariston.csv, ariston_zone*.csv)
+# Design: wiki specs/2026-10-14-ariston-controls. Needed by every ariston_* package.
+mqtt:
+  # Winter mode belongs to the whole boiler, not to a zone. The zone climates' off/heat mode writes the same register.
+  switch:
+    - name: "Heating season"
+      unique_id: ariston_controls_winter_mode
+      default_entity_id: switch.heating_winter_mode
+      state_topic: "ebusd/ariston/winter_mode"
+      value_template: "{{ value_json['0'].value }}"
+      state_on: "on"
+      state_off: "off"
+      command_topic: "ebusd/cmd/winter_mode/set"
+      payload_on: "on"
+      payload_off: "off"
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+    - name: "Automatic thermoregulation"
+      unique_id: ariston_controls_auto_mode
+      default_entity_id: switch.heating_auto_thermoregulation
+      state_topic: "ebusd/ariston/auto_mode"
+      value_template: "{{ value_json['0'].value }}"
+      state_on: "on"
+      state_off: "off"
+      command_topic: "ebusd/cmd/auto_mode/set"
+      payload_on: "on"
+      payload_off: "off"
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+# After any command the package re-reads the register, so the entity shows what the boiler holds within seconds, not
+# at the next broadcast (minutes) or dump (30 min). The name of a cmd row is the name of its state topic, and its prefix
+# says the circuit: z1_... is in ariston_z1, z2_... in ariston_z2, anything else in ariston. Each has an r row there
+# (ariston.csv, ariston_zone*.csv), so a zone added or left out needs no change here.
+automation:
+  - alias: "Ariston controls: re-read a register after it was set"
+    id: ariston_controls_reread
+    # One run per change, however close together: in the default mode a second change during the 10 s of the first
+    # (two sliders moved in a row) gets no re-read and its entity keeps the old value.
+    mode: parallel
+    max: 30
+    triggers:
+      - trigger: mqtt
+        topic: "ebusd/cmd/+/set"
+    actions:
+      - variables:
+          name: "{{ trigger.topic.split('/')[2] }}"
+          circuit: >-
+            {%- set prefix = name.split('_')[0] -%}
+            {{ 'ariston_' ~ prefix if prefix is match('z[0-9]+$') else 'ariston' }}
+      # Reads on the bus fail now and then (about one in five), so ask twice.
+      - delay: "00:00:03"
+      - action: mqtt.publish
+        data:
+          topic: "ebusd/{{ circuit }}/{{ name }}/get"
+      - delay: "00:00:07"
+      - action: mqtt.publish
+        data:
+          topic: "ebusd/{{ circuit }}/{{ name }}/get"

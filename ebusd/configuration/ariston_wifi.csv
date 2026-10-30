@@ -1,0 +1,7 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Addressed reads of the WiFi module (84), keyed on the id lists seen in 2026 (the Z2 interface f0 asks; in 2025 the boiler
+# asked d140 cc4b c89c instead). Passive only, and ebusd rejects a second passive row with the same name.
+# Multi-field rows leave the message comment empty; each field comment is that entity's full name.
+# Reply: answered-mask, then one byte per id. ebusd keys hold at most 7 id bytes, so the 4-id request is keyed on 3.
+m,ariston_wifi,wifi_config,,,84,2000,c0f21421c5f0,,s,IGN:2,,,,ntp,s,UCH,0=off;1=on,,NTP,,s,IGN:1,,,,wifi,s,UCH,0=off;1=on,,WiFi
+m,ariston_wifi,wifi_state,,,84,2000,cc4bd140c89c,,s,IGN:1,,,,connection,s,UCH,0=off;1=initializing;2=idle;3=ap_initializing;4=ap_mode;5=connecting;6=wifi_connected;7=cloud_init;8=cloud_connected;9=error,,Connection,,s,IGN:1,,,,sw_update,s,UCH,0=initializing;1=waiting;2=upd_micro_1;3=upd_micro_2,,Software update

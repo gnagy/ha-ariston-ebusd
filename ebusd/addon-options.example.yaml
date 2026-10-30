@@ -1,0 +1,33 @@
+# Example options for the eBUSd add-on (https://github.com/LukasGrebe/ha-addons), as set in its Configuration tab.
+# They live in the add-on's state, not in a file. Inside the add-on, /config is its /addon_configs/<slug>_ebusd/
+# folder: copy ebusd/configuration/ and ebusd/mqtt-hassio.cfg there.
+name: eBUSd
+version: 26.1.8
+boot: auto
+options:
+  seed_mqtt_cfg: false
+  # Your adapter, one of the two. A USB adapter is picked under device. A network adapter, such as an ESP32-based
+  # one, goes in network_device, e.g. ens:192.0.2.10:9999 for the enhanced protocol. Check the adapter's
+  # documentation for the exact form.
+  device: /dev/serial/by-id/<your-adapter>
+  # network_device: ens:192.0.2.10:9999
+  commandline_options:
+    - --enablehex
+    - --configpath=/config/configuration
+    - --scanconfig=none
+    - --pollinterval=5
+    - --accesslevel='*'
+    - --latency=0
+    - --lograwdata
+    - --lograwdatafile=/config/logs/raw.log
+    - --lograwdatasize=200000
+    - --mqttlog
+    - --mqttretain
+    - --mqttjson
+    - --mqttint=/config/mqtt-hassio.cfg
+    - --log=all:info
+    - --log=network:error
+    - --log=bus:info
+    - --log=update:error
+    - --log=main:info
+    - --log=other:info

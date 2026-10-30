@@ -1,0 +1,194 @@
+# Boiler fault summary over the per-error ebusd entities.
+#
+# ebusd publishes one problem binary_sensor per index of the boiler's 2004 error
+# table (ebus-hacking wiki: ebusd-errors-in-ha). This rolls them up into one
+# entity to alert on and show on a dashboard: on while any error is active, with
+# the active codes, descriptions and kinds as attributes.
+#
+# Error entities are found by id pattern, not listed: binary_sensor.ebusd_ariston_error_<code>,
+# as the ebusd rework's discovery config pins them (ebus-hacking wiki: ebusd-ha-name-map).
+# The old binary_sensor.…_ariston_errors_error_<code> ids do not match, so the two
+# sets are not counted twice while both exist.
+# c5 (deaeration / automatic setup) and ec (the display's "---") are notices, not
+# faults, and are left out. Descriptions and kinds come from the ebus-hacking
+# wiki's error-codes.csv (Genus One installation manual p. 37, training manual
+# p. 85-86); kind is warning, safety_shutoff (clears itself) or lockout (RESET).
+template:
+  - binary_sensor:
+      - name: "Boiler fault"
+        unique_id: ebusd_ariston_boiler_fault
+        device_class: problem
+        icon: mdi:water-boiler-alert
+
+        # ebusd's entities go unavailable together whenever the add-on stops
+        # (the discovery configs share one availability topic, %prefixn/global/running).
+        # Without this the roll-up would count no errors in state `on` and report
+        # a clean boiler through every restart — on 2026-09-16 it read `off` for
+        # three hours while 1P4 was in fact still active. No error entity in a
+        # real state means we do not know, so the summary is unavailable too.
+        availability: >-
+          {{ states.binary_sensor
+             | selectattr('entity_id', 'search', 'ebusd_ariston_error_')
+             | rejectattr('state', 'in', ['unavailable', 'unknown'])
+             | list | count > 0 }}
+        state: >-
+          {{ states.binary_sensor
+             | selectattr('entity_id', 'search', 'ebusd_ariston_error_')
+             | rejectattr('entity_id', 'search', '_error_(c5|ec)$')
+             | selectattr('state', 'eq', 'on')
+             | list | count > 0 }}
+        attributes:
+          errors: >-
+            {%- set info = {
+            "101": ["101", "Overheat", "safety_shutoff"],
+            "102": ["102", "Pressure sensor error", "safety_shutoff"],
+            "103": ["103", "Insufficient circulation", "safety_shutoff"],
+            "104": ["104", "Insufficient circulation", "safety_shutoff"],
+            "105": ["105", "Insufficient circulation", "safety_shutoff"],
+            "106": ["106", "Insufficient circulation", "safety_shutoff"],
+            "107": ["107", "Insufficient circulation", "safety_shutoff"],
+            "108": ["108", "Insufficient water (request filling)", "safety_shutoff"],
+            "110": ["110", "C.H. flow temp. probe circuit open / short circuit", "safety_shutoff"],
+            "111": ["111", "Press Esc to start filling", "safety_shutoff"],
+            "112": ["112", "C.H. return temp. probe circuit open / short circuit", "safety_shutoff"],
+            "114": ["114", "External sensor circuit open / short circuit", "safety_shutoff"],
+            "116": ["116", "Floor thermostat open", "safety_shutoff"],
+            "118": ["118", "Heating delivery probe problem", "safety_shutoff"],
+            "1p1": ["1P1", "Insufficient circulation indication", "warning"],
+            "1p2": ["1P2", "Insufficient circulation indication", "warning"],
+            "1p3": ["1P3", "Insufficient circulation indication", "warning"],
+            "1p4": ["1P4", "Insufficient water (request filling)", "warning"],
+            "1p4_esc": ["1P4", "Press Esc to start filling", "warning"],
+            "1p5": ["1P5", "Filling incomplete", "warning"],
+            "1p6": ["1P6", "Filling incomplete", "warning"],
+            "1p7": ["1P7", "Too many refilling procedures", "warning"],
+            "201": ["201", "DHW probe error", "unknown"],
+            "203": ["203", "Ignition probe defective", "safety_shutoff"],
+            "205": ["205", "DHW in probe open circuit", "safety_shutoff"],
+            "209": ["209", "Tank overtemperature", "unknown"],
+            "2p2": ["2P2", "DHW cleansing cycle not completed", "warning"],
+            "303": ["303", "Main PCB error", "lockout"],
+            "304": ["304", "Too many (> 5) resets in 15 minutes", "safety_shutoff"],
+            "306": ["306", "Main PCB error", "safety_shutoff"],
+            "309": ["309", "Gas valve or gas relay error", "lockout"],
+            "313": ["313", "Low voltage fault", "safety_shutoff"],
+            "3p9": ["3P9", "Scheduled maintenance - call service", "warning"],
+            "411": ["411", "Zone 1 - room sensor circuit open / short circuit", "safety_shutoff"],
+            "501": ["501", "No flame detected (after 5 times with 5P6)", "lockout"],
+            "502": ["502", "Flame detected with gas valve closed", "safety_shutoff"],
+            "503": ["503", "Flame detected with gas valve closed (after 20 seconds with 502)", "lockout"],
+            "504": ["504", "Flame lift", "lockout"],
+            "5p1": ["5P1", "1 failed ignition", "warning"],
+            "5p2": ["5P2", "2 failed ignitions", "warning"],
+            "5p3": ["5P3", "Flame cut-off", "warning"],
+            "5p5": ["5P5", "Low gas pressure fault", "warning"],
+            "5p6": ["5P6", "Ignition failed", "warning"],
+            "610": ["610", "Exchanger probe open or overtemperature", "lockout"],
+            "611": ["611", "Fan warning - anomaly in air inlet and/or flue gas exhaust ducts (boiler switches off, fan runs 20 minutes at maximum); if not resolved, error 612 appears", "safety_shutoff"],
+            "612": ["612", "Fan error (speed higher or lower than the set values)", "safety_shutoff"],
+            "802": ["802", "Flame sensed with gas valve closed", "safety_shutoff"],
+            "803": ["803", "Mismatch kW size, ID combustion (set parameter 229)", "safety_shutoff"],
+            "804": ["804", "Decoupling clip-in required (solar/hybrid electronics need clip-in accessory 3319171)", "safety_shutoff"],
+            "901": ["901", "Bus communication error", "unknown"]
+            } -%}
+            {%- set ns = namespace(out=[]) -%}
+            {%- for s in states.binary_sensor
+                 | selectattr('entity_id', 'search', 'ebusd_ariston_error_')
+                 | rejectattr('entity_id', 'search', '_error_(c5|ec)$')
+                 | selectattr('state', 'eq', 'on') -%}
+              {%- set key = s.entity_id.split('_error_')[-1] -%}
+              {%- set i = info.get(key, [key | upper, 'Unknown error', 'unknown']) -%}
+              {%- set ns.out = ns.out + [{'code': i[0], 'description': i[1], 'kind': i[2],
+                                           'since': s.last_changed.isoformat(), 'entity_id': s.entity_id}] -%}
+            {%- endfor -%}
+            {{ ns.out }}
+
+# Notifications on that roll-up. In-HA persistent notifications only for now —
+# whether this is naggy enough decides later whether the phone is added too.
+#
+# The two triggers are deliberately asymmetric. A fault fires on any transition
+# into `on`, including out of `unavailable`: a fault that starts while the add-on
+# is down would otherwise never announce itself, since the state after the restart
+# is `on` and stays there with no further transition. Re-announcing an ongoing
+# fault after a restart is the acceptable cost. The clear side fires on any change
+# to `off`: the fault card goes whatever the summary came from, because a fault card
+# beside an `off` summary is stale either way - an error that cleared while ebusd
+# was down would otherwise leave it up until the next fault. Only a change out of a
+# real `on` says "cleared"; out of `unavailable` (ebusd back) or `unknown` (Core
+# restart, template reload) the card just goes, so a restart never claims the
+# boiler recovered.
+#
+# Both notifications use fixed ids, so a second fault replaces the card rather
+# than stacking, and each direction dismisses the other's card. No repeats or
+# escalation in v1 (D56): a persistent notification already stays until dismissed.
+automation:
+  - alias: "Boiler fault - notify"
+    id: boiler_fault_notify
+    mode: restart
+    triggers:
+      # Errors arrive in a burst, and only the first one moves the roll-up to `on`;
+      # the rest land while it is already on and produce no state transition. So the
+      # attribute is a trigger too, and the card is rewritten in place as the set
+      # changes — a lockout arriving after a warning must not leave the card saying
+      # the boiler is still running.
+      - trigger: state
+        entity_id: binary_sensor.boiler_fault
+        to: "on"
+      - trigger: state
+        entity_id: binary_sensor.boiler_fault
+        attribute: errors
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.boiler_fault
+        state: "on"
+    actions:
+      # Let the burst settle before composing, so one fault is one card rather than
+      # three rewrites in as many seconds. mode: restart makes each new error reset it.
+      - delay: "00:00:10"
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: boiler_fault_cleared
+      - action: persistent_notification.create
+        data:
+          notification_id: boiler_fault
+          title: >-
+            {% set errors = state_attr('binary_sensor.boiler_fault', 'errors') or [] %}
+            {% set kinds = errors | map(attribute='kind') | list %}
+            {{ 'Boiler locked out' if 'lockout' in kinds
+               else 'Boiler shut down' if 'safety_shutoff' in kinds
+               else 'Boiler warning' }}
+          # Built as paragraphs and joined, rather than written out as lines: a
+          # notification card renders markdown, where a single newline is not a break.
+          message: >-
+            {%- set errors = state_attr('binary_sensor.boiler_fault', 'errors') or [] -%}
+            {%- set said = {
+              'lockout': 'Locked out: the boiler has stopped and needs a reset at the display.',
+              'safety_shutoff': 'Safety shutdown: the boiler stops and restarts by itself once the cause is gone.',
+              'warning': 'Warning: the boiler keeps running.'} -%}
+            {%- set ns = namespace(parts=[]) -%}
+            {%- for e in errors -%}
+            {%- set ns.parts = ns.parts + ['**' ~ e.code ~ '** — ' ~ e.description ~ '\n' ~
+                                           said.get(e.kind, 'Unclassified error.')] -%}
+            {%- endfor -%}
+            {{ ns.parts | join('\n\n') if ns.parts else 'No error detail available.' }}
+
+  - alias: "Boiler fault - notify cleared"
+    id: boiler_fault_notify_cleared
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.boiler_fault
+        to: "off"
+    actions:
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: boiler_fault
+      - if: "{{ trigger.from_state is not none and trigger.from_state.state == 'on' }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: boiler_fault_cleared
+              title: "Boiler fault cleared"
+              message: >-
+                No boiler errors are active. Pressure is
+                {{ states('sensor.ebusd_ariston_boiler_pressure') }} bar.

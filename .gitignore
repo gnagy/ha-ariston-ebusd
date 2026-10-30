@@ -1,0 +1,8 @@
+.DS_Store
+.idea/
+__pycache__/
+.venv/
+
+# Local add-on snapshots and logs, never committed
+*.local.yaml
+logs/

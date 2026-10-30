@@ -1,0 +1,39 @@
+# The boiler's own record of its most recent error, as a timestamp.
+#
+# ebusd polls error-history slot 0400 (ebus-hacking wiki: ebusd-errors-in-ha) and
+# publishes code, zone, year, month, day and time as separate entities: the boiler
+# stores the date year first, which none of ebusd's date types read, so the date is
+# assembled here. The year is two digits and the time is the boiler's local clock,
+# set through the WiFi module's NTP, so it is read as Home Assistant's own zone.
+#
+# This is when the boiler raised the error, where the per-error entities only know
+# when Home Assistant saw them change - after an add-on restart that can be days
+# later. An empty slot (menu 8.6.1 clears the list) makes the sensor unavailable
+# rather than inventing a date in 2000.
+template:
+  - sensor:
+      - name: "Boiler last error"
+        unique_id: ebusd_ariston_boiler_last_error_at
+        device_class: timestamp
+        icon: mdi:alert-circle-outline
+        availability: >-
+          {{ states('sensor.ebusd_ariston_last_error_year') | int(0) > 0
+             and states('sensor.ebusd_ariston_last_error_month') | int(0) in range(1, 13)
+             and states('sensor.ebusd_ariston_last_error_day') | int(0) in range(1, 32)
+             and states('sensor.ebusd_ariston_last_error_time') is match('^\d{1,2}:\d{2}$') }}
+        state: >-
+          {%- set y = states('sensor.ebusd_ariston_last_error_year') | int -%}
+          {%- set m = states('sensor.ebusd_ariston_last_error_month') | int -%}
+          {%- set d = states('sensor.ebusd_ariston_last_error_day') | int -%}
+          {%- set tm = states('sensor.ebusd_ariston_last_error_time') -%}
+          {{ strptime('%04d-%02d-%02d ' | format(2000 + y, m, d) ~ tm, '%Y-%m-%d %H:%M')
+             .replace(tzinfo=now().tzinfo).isoformat() }}
+        attributes:
+          code: "{{ states('sensor.ebusd_ariston_last_error_code') }}"
+          # The per-error sensor's name carries the description after the code,
+          # e.g. "Boiler 1P4 Filling required", so no second copy of the table.
+          description: >-
+            {%- set c = states('sensor.ebusd_ariston_last_error_code') -%}
+            {%- set n = state_attr(['binary_sensor', 'ebusd_ariston_error_' ~ (c | lower)] | join('.'), 'friendly_name') -%}
+            {{ n.split(c, 1)[-1] | trim if n else 'Unknown error' }}
+          zone: "{{ states('sensor.ebusd_ariston_last_error_zone') }}"

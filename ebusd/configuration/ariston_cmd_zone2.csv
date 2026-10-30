@@ -1,0 +1,8 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Zone 2's write rows: the zone 1 registers one step along the zone-indexed families (6272, 6472, 6a72, c27a, c07a).
+# Optional, with ariston_zone2.csv and ariston_climate_zone2.yaml: leave all three out for a one-zone boiler.
+w,cmd,z2_day_temp,Day temperature,,fe,2020,6272,,s,UIN,10,°C
+w,cmd,z2_curve_offset,Heating curve offset,,fe,2020,6472,,s,SIN,10,°C
+w,cmd,z2_curve_slope,Heating curve slope,,fe,2020,6a72,,s,UIN,100,
+w,cmd,z2_room_influence,Room influence,,fe,2020,c27a,,s,UCH,,
+w,cmd,z2_thermoreg_type,Thermoregulation type,,fe,2020,c07a,,s,UCH,0=fixed flow temperature;1=basic thermoregulation;2=room temp only;3=outdoor temp only;4=room and outdoor temp,,

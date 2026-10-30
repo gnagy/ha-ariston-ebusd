@@ -1,0 +1,102 @@
+# Zone 2: the same controls as zone 1 (ariston_climate_zone1.yaml). Optional: delete this file for a one-zone boiler.
+#
+# Reads from ebusd:  ebusd/ariston/winter_mode, boiler_status;  ebusd/ariston_z2/z2_day_temp, z2_room_temp,
+#                    z2_curve_offset, z2_curve_slope, z2_room_influence, z2_thermoreg_type
+# Writes to ebusd:   ebusd/cmd/winter_mode/set (the heating season is the boiler's, not the zone's),
+#                    ebusd/cmd/z2_day_temp/set, z2_curve_offset, z2_curve_slope, z2_room_influence, z2_thermoreg_type
+# Re-read after a set: the map in ariston_boiler.yaml. Design: wiki specs/2026-10-14-ariston-controls.
+# Unlike zone 1, the Sensys (the zone 2 room sensor) does not wrap its temperature, so no correction is needed.
+mqtt:
+  climate:
+    - name: "Zone 2"
+      unique_id: ariston_controls_zone_2_climate
+      default_entity_id: climate.zone_2
+      modes: ["off", "heat"]
+      mode_state_topic: "ebusd/ariston/winter_mode"
+      mode_state_template: "{{ 'heat' if value_json['0'].value == 'on' else 'off' }}"
+      mode_command_topic: "ebusd/cmd/winter_mode/set"
+      mode_command_template: "{{ 'on' if value == 'heat' else 'off' }}"
+      temperature_state_topic: "ebusd/ariston_z2/z2_day_temp"
+      temperature_state_template: "{{ value_json['0'].value }}"
+      temperature_command_topic: "ebusd/cmd/z2_day_temp/set"
+      current_temperature_topic: "ebusd/ariston_z2/z2_room_temp"
+      current_temperature_template: "{{ value_json['0'].value }}"
+      action_topic: "ebusd/ariston/boiler_status"
+      action_template: "{{ 'heating' if value_json['0'].value == 'heating' else 'idle' }}"
+      min_temp: 15
+      max_temp: 25
+      temp_step: 0.5
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+  number:
+    - name: "Curve offset"
+      unique_id: ariston_controls_z2_curve_offset
+      default_entity_id: number.heating_z2_curve_offset
+      device: {identifiers: [ebusd_ariston_z2]}
+      state_topic: "ebusd/ariston_z2/z2_curve_offset"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z2_curve_offset/set"
+      min: -14
+      max: 14
+      step: 0.5
+      unit_of_measurement: "°C"
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+    - name: "Curve slope"
+      unique_id: ariston_controls_z2_curve_slope
+      default_entity_id: number.heating_z2_curve_slope
+      device: {identifiers: [ebusd_ariston_z2]}
+      state_topic: "ebusd/ariston_z2/z2_curve_slope"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z2_curve_slope/set"
+      min: 1.0
+      max: 3.5
+      step: 0.05
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+    - name: "Room influence"
+      unique_id: ariston_controls_z2_room_influence
+      default_entity_id: number.heating_z2_room_influence
+      device: {identifiers: [ebusd_ariston_z2]}
+      state_topic: "ebusd/ariston_z2/z2_room_influence"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z2_room_influence/set"
+      min: 0
+      max: 20
+      step: 1
+      mode: slider
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+  select:
+    - name: "Thermoregulation"
+      unique_id: ariston_controls_z2_thermoreg_type
+      default_entity_id: select.heating_z2_thermoregulation
+      device: {identifiers: [ebusd_ariston_z2]}
+      # The five types the boiler has (Genus One installation manual, parameter 5.2.1); names are the value list of the
+      # write row in ariston_cmd.csv.
+      options:
+        - "fixed flow temperature"
+        - "basic thermoregulation"
+        - "room temp only"
+        - "outdoor temp only"
+        - "room and outdoor temp"
+      state_topic: "ebusd/ariston_z2/z2_thermoreg_type"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/z2_thermoreg_type/set"
+      entity_category: config
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"

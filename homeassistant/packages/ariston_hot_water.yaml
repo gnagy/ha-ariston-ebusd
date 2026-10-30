@@ -1,0 +1,37 @@
+# Hot water: on/off and the comfort temperature.
+#
+# Reads from ebusd:  ebusd/ariston/dhw_status, sanitary_temp_comfort
+# Writes to ebusd:   ebusd/cmd/dhw_status/set, ebusd/cmd/sanitary_temp_comfort/set  (re-read by ariston_boiler.yaml)
+# Design: wiki specs/2026-10-14-ariston-controls. A switch and a number, not an MQTT water heater: that platform only
+# accepts the operation names off, eco, electric, gas, heat_pump, high_demand and performance, none of which means "on".
+mqtt:
+  switch:
+    - name: "Hot water"
+      unique_id: ariston_controls_dhw_power
+      default_entity_id: switch.heating_hot_water
+      state_topic: "ebusd/ariston/dhw_status"
+      value_template: "{{ value_json['0'].value }}"
+      state_on: "on"
+      state_off: "off"
+      command_topic: "ebusd/cmd/dhw_status/set"
+      payload_on: "on"
+      payload_off: "off"
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"
+
+  number:
+    - name: "Hot water temperature"
+      unique_id: ariston_controls_dhw_comfort_temp
+      default_entity_id: number.heating_hot_water_temperature
+      state_topic: "ebusd/ariston/sanitary_temp_comfort"
+      value_template: "{{ value_json['0'].value }}"
+      command_topic: "ebusd/cmd/sanitary_temp_comfort/set"
+      min: 40
+      max: 65
+      step: 1
+      unit_of_measurement: "°C"
+      mode: slider
+      availability_topic: "ebusd/global/running"
+      payload_available: "true"
+      payload_not_available: "false"

@@ -1,0 +1,48 @@
+#type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
+# Addressed reads of the boiler (3c). ebusd polls r rows itself (r1 often, r5 less, r9 rarely) and also picks them up
+# when another device sends the same request. The reply starts with a bitmask of the ids answered (IGN:1).
+# Counters are 32-bit values split over an id pair (low word, high word), requested together. Menu codes: 800 diverter
+# cycles, 802 circulation cycles, 803 life time, 810 burner hours, 813 ignition cycles. Burner registers: wiki
+# ariston-burner-registers.
+r1,ariston,boiler_pressure,Heating circuit pressure,,3c,2000,7547,,s,IGN:1,,,,,s,UIN,10,bar
+r1,ariston,heating_temp_out,Flow temperature,,3c,2000,6810,,s,IGN:1,,,,,s,UIN,10,°C
+r1,ariston,heating_temp_return,Return temperature,,3c,2000,6910,,s,IGN:1,,,,,s,UIN,10,°C
+# The boiler's CH flow set temperature, Sensys menu 8.3.0: the flow it heats to while a zone requests heat. On
+# 2026-09-19 it read 65.0 with zone 1's computed setpoint (6197) at 65.0 and zone 2's (6297) at 35.0, so probably the
+# higher of the two. The WiFi module reads it too. Addressed 2001 read: value, then min and max, skipped.
+r5,ariston,heating_flow_temp_setpoint,CH flow set temperature,,3c,2001,6047,,s,UIN,10,°C,,,s,IGN:4
+r1,ariston,boiler_gas_power,Gas power,,3c,2000,6847,,s,IGN:1,,,,,s,UIN,10,kW
+r1,ariston,dhw_temp,DHW temperature,,3c,2000,7747,,s,IGN:1,,,,,s,UIN,10,°C
+r5,ariston,boiler_fan_speed,Fan speed,,3c,2000,4013,,s,IGN:1,,,,,s,UIN,,rpm
+r5,ariston,boiler_pump_modulation,Pump modulation,,3c,2000,c300,,s,IGN:1,,,,,s,UCH,,%
+r9,ariston,boiler_diverter_cycles,Diverter valve cycles,,3c,2000,40d241d2,,s,IGN:1,,,,,s,ULG,,
+r9,ariston,boiler_circulation_cycles,Circulation cycles,,3c,2000,44d245d2,,s,IGN:1,,,,,s,ULG,,
+r9,ariston,boiler_life_time,Life time,,3c,2000,50d951d9,,s,IGN:1,,,,,s,ULG,,h
+r9,ariston,hours_burner_on,Burner hours,,3c,2000,46d14bd14cd1,,s,IGN:3,,,,,s,UIN,,h
+# The rest of the d1 family (menu 8.1). The WiFi module's poll above answers 46d1 and 4cd1 too, but that row keeps
+# only 4bd1 and changing it would change hours_burner_on's unique id. Named 2026-09-19 against menu 8.1.1-8.1.4 read
+# on the Sensys, whose own reads are in the raw log (ebus-hacking wiki: ariston-register-inventory). The display shows
+# a tenth of 4cd1 and 46d1; 4dd1 is in minutes as it stands. 47d1-4ad1 answer mask 00.
+r9,ariston,hours_burner_on_dhw,DHW burner hours,,3c,2000,4cd1,,s,IGN:1,,,,,s,UIN,,h
+r9,ariston,boiler_flame_faults,Flame faults,,3c,2000,46d1,,s,IGN:1,,,,,s,UIN,,
+r9,ariston,boiler_heat_request_duration,Heat request duration,,3c,2000,4dd1,,s,IGN:1,,,,,s,UIN,,min
+# The d2 family (menu 8.0): 32-bit counters, the low register then the high, read as one ULG like the diverter and
+# circulation cycles above; the Sensys asks for the same pairs. 46d2-49d2 are not in the menu and not read.
+r9,ariston,hours_circulator_on,Circulator on time,,3c,2000,42d243d2,,s,IGN:1,,,,,s,ULG,,h
+r9,ariston,hours_fan_on,Fan on time,,3c,2000,4ad24bd2,,s,IGN:1,,,,,s,ULG,,h
+r9,ariston,boiler_fan_cycles,Fan cycles,,3c,2000,4cd24dd2,,s,IGN:1,,,,,s,ULG,,
+r9,ariston,boiler_flame_detections_ch,CH flame detections,,3c,2000,4ed24fd2,,s,IGN:1,,,,,s,ULG,,
+r9,ariston,boiler_flame_detections_dhw,DHW flame detections,,3c,2000,50d251d2,,s,IGN:1,,,,,s,ULG,,
+r9,ariston,boiler_ignition_cycles,Ignition cycles,,3c,2000,42d843d8,,s,IGN:1,,,,,s,ULG,,
+# Menu 8.2 live values and a 2.4 setting, placed 2026-09-19 from the Sensys's menu reads. They are read with 2001,
+# as the Sensys reads them: the answer is value, minimum, maximum, so the last two bytes are skipped. The diverter's
+# labels are menu 8.2.4's (0 = D.H.W., 1 = central heating), agreeing with kredow's register map; it rests at 0,
+# hot water, when the boiler is idle in summer.
+r5,ariston,boiler_diverter_position,Diverter valve position,,3c,2001,0001,,s,UCH,0=hot water;1=heating,,,,s,IGN:2
+r5,ariston,boiler_pump_speed,Pump speed,,3c,2001,c000,,s,UCH,,,,,s,IGN:2
+r9,ariston,boiler_warning_pressure,Warning pressure,,3c,2001,c12a,,s,UCH,10,bar,,,s,IGN:2
+# Passive only. The Z1 thermostat (70) reads the flame every 10 s whatever else reads it, so polling adds nothing.
+m,ariston,boiler_flame,Flame,,3c,2000,0e11,,s,IGN:1,,,,,s,UCH,0=off;1=on
+# The Sensys (f0) asks d140 409d 7547 d69c every 10 s; reply mask, d140 (1 byte), 409d (2), 7547 (2), d69c (1).
+# Keyed on the first two ids. 409d is 0 without a flame and about 970 while burning; its meaning is unconfirmed.
+m,ariston,boiler_combustion_control,Combustion control (unconfirmed),,3c,2000,d140409d,,s,IGN:2,,,,,s,UIN,10,%
