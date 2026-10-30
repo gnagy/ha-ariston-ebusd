@@ -1,7 +1,7 @@
 #type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
 # Boiler errors: the boiler broadcasts 37 fe 2004 05 <index> <flags> 00 00 3c on change and dumps every index hourly.
 # One row per index in that dump, so each error is its own value. flags: 00 inactive, 02 active; on a zone error bit 0 is
-# zone-enable and bits 1-6 the zones, so 01 is inactive. Index-to-code table: wiki ariston-error-telegrams.
+# zone-enable and bits 1-6 the zones, so 01 is inactive. Index-to-code table: docs/errors.md.
 m,ariston,error_101,101 Overtemperature,37,fe,2004,00,,s,UCH,0=off;1=off;2=on;3=on;5=on;7=on,,,,s,IGN:3,,,
 m,ariston,error_102,102 Pressure sensor error,37,fe,2004,01,,s,UCH,0=off;1=off;2=on;3=on;5=on;7=on,,,,s,IGN:3,,,
 m,ariston,error_1p1,1P1 Insufficient circulation,37,fe,2004,02,,s,UCH,0=off;1=off;2=on;3=on;5=on;7=on,,,,s,IGN:3,,,

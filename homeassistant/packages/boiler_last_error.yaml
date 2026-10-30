@@ -1,6 +1,6 @@
 # The boiler's own record of its most recent error, as a timestamp.
 #
-# ebusd polls error-history slot 0400 (ebus-hacking wiki: ebusd-errors-in-ha) and
+# ebusd polls error-history slot 0400 (docs/errors.md) and
 # publishes code, zone, year, month, day and time as separate entities: the boiler
 # stores the date year first, which none of ebusd's date types read, so the date is
 # assembled here. The year is two digits and the time is the boiler's local clock,

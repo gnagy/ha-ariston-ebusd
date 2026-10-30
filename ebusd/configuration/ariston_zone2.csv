@@ -1,5 +1,5 @@
 #type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
-# Heat request mode values from menu 5.2.9 - the zone 2 twin of 4.2.9. See wiki ariston-menu.
+# Zone 2's twins of the zone 1 settings: menu 5.2.x for 4.2.x. Value lists in docs/registers.md.
 # Zone 2 (here a Sensys HD, bus address f0). Optional: leave this file out if the boiler has one zone. Same formats as zone 1; min/max flow, slope and regulation are not in the 2020 dump
 # layout known for zone 1, so they are left out. Names follow zone 1's where zone 1 has history.
 m,ariston_z2,z2_room_temp,Room temperature,,fe,200f,7218,,s,SIN,10,°C
@@ -12,7 +12,7 @@ m,ariston_z2,z2_curve_offset,Heating curve offset,,fe,200e,6472,,s,SIN,10,°C
 # zone 2, wrote c679 and left c67a at 2, so these values are assumed for zone 2, not observed.
 m,ariston_z2,z2_request_mode,Zone mode,,fe,200f,c67a,,s,UCH,0=off;1=unknown;2=manual;3=time program,
 # The zone 1 rows' twins, from the boiler's 2020 settings dump. ebusd decodes a telegram with exactly one
-# definition (wiki ebusd-one-telegram-many-definitions), so each of these is one row with several fields,
+# definition (docs/registers.md), so each of these is one row with several fields,
 # keyed on the first register of its telegram. The leading byte of the 0081 telegram is zone 1's range.
 #   37fe20200f 008101 60728a02 61725e01 6472a6ff     z1 range, z2 max, z2 min, z2 offset
 #   37fe20200d c27a05 c97a06 008201 60733403         z2 influence, ?, z2 range, z3 max

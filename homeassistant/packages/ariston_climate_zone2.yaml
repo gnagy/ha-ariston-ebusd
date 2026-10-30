@@ -4,7 +4,7 @@
 #                    z2_curve_offset, z2_curve_slope, z2_room_influence, z2_thermoreg_type
 # Writes to ebusd:   ebusd/cmd/winter_mode/set (the heating season is the boiler's, not the zone's),
 #                    ebusd/cmd/z2_day_temp/set, z2_curve_offset, z2_curve_slope, z2_room_influence, z2_thermoreg_type
-# Re-read after a set: the map in ariston_boiler.yaml. Design: wiki specs/2026-10-14-ariston-controls.
+# Re-read after a set: the map in ariston_boiler.yaml. Design: docs/design.md.
 # Unlike zone 1, the Sensys (the zone 2 room sensor) does not wrap its temperature, so no correction is needed.
 mqtt:
   climate:

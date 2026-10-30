@@ -2,8 +2,8 @@
 # Addressed reads of the boiler (3c). ebusd polls r rows itself (r1 often, r5 less, r9 rarely) and also picks them up
 # when another device sends the same request. The reply starts with a bitmask of the ids answered (IGN:1).
 # Counters are 32-bit values split over an id pair (low word, high word), requested together. Menu codes: 800 diverter
-# cycles, 802 circulation cycles, 803 life time, 810 burner hours, 813 ignition cycles. Burner registers: wiki
-# ariston-burner-registers.
+# cycles, 802 circulation cycles, 803 life time, 810 burner hours, 813 ignition cycles. Counters and burner registers:
+# docs/registers.md.
 r1,ariston,boiler_pressure,Heating circuit pressure,,3c,2000,7547,,s,IGN:1,,,,,s,UIN,10,bar
 r1,ariston,heating_temp_out,Flow temperature,,3c,2000,6810,,s,IGN:1,,,,,s,UIN,10,°C
 r1,ariston,heating_temp_return,Return temperature,,3c,2000,6910,,s,IGN:1,,,,,s,UIN,10,°C
@@ -20,9 +20,8 @@ r9,ariston,boiler_circulation_cycles,Circulation cycles,,3c,2000,44d245d2,,s,IGN
 r9,ariston,boiler_life_time,Life time,,3c,2000,50d951d9,,s,IGN:1,,,,,s,ULG,,h
 r9,ariston,hours_burner_on,Burner hours,,3c,2000,46d14bd14cd1,,s,IGN:3,,,,,s,UIN,,h
 # The rest of the d1 family (menu 8.1). The WiFi module's poll above answers 46d1 and 4cd1 too, but that row keeps
-# only 4bd1 and changing it would change hours_burner_on's unique id. Named 2026-09-19 against menu 8.1.1-8.1.4 read
-# on the Sensys, whose own reads are in the raw log (ebus-hacking wiki: ariston-register-inventory). The display shows
-# a tenth of 4cd1 and 46d1; 4dd1 is in minutes as it stands. 47d1-4ad1 answer mask 00.
+# only 4bd1 and changing it would change hours_burner_on's unique id. Named against menu 8.1.1-8.1.4 read on the
+# Sensys, whose own reads are in the raw log (docs/registers.md). The display shows a tenth of 4cd1 and 46d1; 4dd1 is in minutes as it stands. 47d1-4ad1 answer mask 00.
 r9,ariston,hours_burner_on_dhw,DHW burner hours,,3c,2000,4cd1,,s,IGN:1,,,,,s,UIN,,h
 r9,ariston,boiler_flame_faults,Flame faults,,3c,2000,46d1,,s,IGN:1,,,,,s,UIN,,
 r9,ariston,boiler_heat_request_duration,Heat request duration,,3c,2000,4dd1,,s,IGN:1,,,,,s,UIN,,min

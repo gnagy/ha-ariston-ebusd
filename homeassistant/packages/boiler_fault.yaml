@@ -1,18 +1,16 @@
 # Boiler fault summary over the per-error ebusd entities.
 #
 # ebusd publishes one problem binary_sensor per index of the boiler's 2004 error
-# table (ebus-hacking wiki: ebusd-errors-in-ha). This rolls them up into one
+# table (docs/errors.md). This rolls them up into one
 # entity to alert on and show on a dashboard: on while any error is active, with
 # the active codes, descriptions and kinds as attributes.
 #
 # Error entities are found by id pattern, not listed: binary_sensor.ebusd_ariston_error_<code>,
-# as the ebusd rework's discovery config pins them (ebus-hacking wiki: ebusd-ha-name-map).
-# The old binary_sensor.…_ariston_errors_error_<code> ids do not match, so the two
-# sets are not counted twice while both exist.
+# as mqtt-hassio.cfg pins them for new entities (docs/naming.md). Error entities
+# under other ids, from an older configuration, are not counted.
 # c5 (deaeration / automatic setup) and ec (the display's "---") are notices, not
-# faults, and are left out. Descriptions and kinds come from the ebus-hacking
-# wiki's error-codes.csv (Genus One installation manual p. 37, training manual
-# p. 85-86); kind is warning, safety_shutoff (clears itself) or lockout (RESET).
+# faults, and are left out. Descriptions and kinds come from the Genus One
+# installation manual (p. 36-37) and training manual (p. 85-86), see docs/errors.md; kind is warning, safety_shutoff (clears itself) or lockout (RESET).
 template:
   - binary_sensor:
       - name: "Boiler fault"

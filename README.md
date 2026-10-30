@@ -4,25 +4,31 @@ An Ariston boiler in Home Assistant over eBUS: message definitions for [ebusd](h
 MQTT integration file that names its entities, Home Assistant packages that turn them into climate, hot water and
 heating-curve controls, and a dashboard view.
 
-**Status: draft.** The files are the ones running on one house, made generic. Comments that cite "wiki" point at
-notes that are not public yet.
+**Status: draft.** The files are the ones running on one house, made generic.
 
 Start with [docs/getting-started.md](docs/getting-started.md): it installs the reads first, checks them against the
-boiler, and adds the writes last.
+boiler, and adds the writes last. The comments in the files refer to the rest of `docs/`:
+
+| Page                           | What                                                                      |
+|--------------------------------|---------------------------------------------------------------------------|
+| [design](docs/design.md)       | the layers from the boiler to a dashboard, how a write travels, the rules |
+| [naming](docs/naming.md)       | how a CSV row becomes a Home Assistant entity, and why the ids are stable |
+| [registers](docs/registers.md) | the bus, how ebusd decodes Ariston telegrams, zone settings, counters     |
+| [errors](docs/errors.md)       | the boiler's error broadcasts and history, and the fault summary          |
 
 Tested on one boiler only: an Ariston Genus One System 30 with two heating zones. Other Ariston models share much of
 the register set, but check that reads work before you enable any write.
 
 ## Layout
 
-| Path                               | What                                                                           | Goes to                                     |
-|------------------------------------|--------------------------------------------------------------------------------|---------------------------------------------|
-| `ebusd/configuration/`             | Message definitions: broadcasts, polled reads, zones, errors, writes           | the eBUSd add-on's `configuration/` folder  |
-| `ebusd/mqtt-hassio.cfg`            | ebusd's Home Assistant integration file, with the changes marked `Ariston:`    | the eBUSd add-on's `/config`                |
-| `ebusd/addon-options.example.yaml` | Example options for the eBUSd add-on                                           | the add-on's Configuration tab              |
-| `homeassistant/packages/`          | Climate, hot water, heating-curve and fault packages over ebusd's MQTT topics  | Home Assistant's `packages/`                |
-| `homeassistant/dashboards/`        | The Heating view                                                               | a dashboard view, in the raw config editor  |
-| `tools/check-controls.py`          | Checks that the definitions and the packages agree                             | run locally                                 |
+| Path                               | What                                                                          | Goes to                                    |
+|------------------------------------|-------------------------------------------------------------------------------|--------------------------------------------|
+| `ebusd/configuration/`             | Message definitions: broadcasts, polled reads, zones, errors, writes          | the eBUSd add-on's `configuration/` folder |
+| `ebusd/mqtt-hassio.cfg`            | ebusd's Home Assistant integration file, with the changes marked `Ariston:`   | the eBUSd add-on's `/config`               |
+| `ebusd/addon-options.example.yaml` | Example options for the eBUSd add-on                                          | the add-on's Configuration tab             |
+| `homeassistant/packages/`          | Climate, hot water, heating-curve and fault packages over ebusd's MQTT topics | Home Assistant's `packages/`               |
+| `homeassistant/dashboards/`        | The Heating view                                                              | a dashboard view, in the raw config editor |
+| `tools/check-controls.py`          | Checks that the definitions and the packages agree                            | run locally                                |
 
 `_templates.csv` and `broadcast.csv` in `ebusd/configuration/` are stock ebusd files, included so the folder works as
 it is. The rest is new.

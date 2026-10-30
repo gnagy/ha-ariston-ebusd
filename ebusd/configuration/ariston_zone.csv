@@ -1,6 +1,6 @@
 #type,circuit,name,comment,QQ,ZZ,PBSB,ID,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment,field_name,field_part,field_type,field_value,field_unit,field_comment
-# Value lists are the installation manuals' own wording: thermoregulation menu 4.2.1 and heat request mode
-# menu 4.2.9 (Nimbus Plus Net manual p. 62; Zone Manager manual p. 18). See wiki ariston-menu.
+# Value lists: thermoregulation as the Genus One manual words menu 4.2.1 (p. 41), and the zone mode as read off the
+# bus, below. Both in docs/registers.md.
 # Zone 1 settings. 200e/200f rows catch the register's own answer. 2020 rows catch the boiler's rotating
 # settings dump, keyed on the first register of a telegram whose layout was stable from 2025-10 to 2026-08:
 #   6171 5e01 6471 9cff 6571 2602 6671 3403
@@ -18,11 +18,10 @@ m,ariston_z1,z1_flow_temp_min,Minimum flow temperature,,fe,2020,6171,,s,UIN,10,�
 m,ariston_z1,z1_flow_temp_max,Maximum flow temperature,,fe,2020,0520,,s,IGN:11,,,,,s,UIN,10,°C
 m,ariston_z1,z1_curve_slope,Heating curve slope,,fe,2020,6771,,s,IGN:8,,,,,s,UIN,100,
 m,ariston_z1,z1_regulation,,,fe,2020,6c71,,s,IGN:4,,,,type,s,UCH,0=fixed flow temperature;1=basic thermoregulation;2=room temp only;3=outdoor temp only;4=room and outdoor temp,,Thermoregulation type,,s,IGN:2,,,,room_influence,s,UCH,,,Thermoregulation room influence
-# Zone 1's heat request and the flow setpoint the boiler computes for it, Sensys menu 4.3.4 and 4.3.8 (placed
-# 2026-09-19, wiki ariston-register-inventory). The boiler (37) broadcasts 0191 on 200f about every 5 min, value
-# then a byte left unread. 6197 is broadcast only when asked, but the boiler answers an addressed 2001 read: value,
+# Zone 1's heat request and the flow setpoint the boiler computes for it, Sensys menu 4.3.4 and 4.3.8
+# (docs/registers.md). The boiler (37) broadcasts 0191 on 200f about every 5 min, value then a byte left unread. 6197 is broadcast only when asked, but the boiler answers an addressed 2001 read: value,
 # then min and max, skipped. The setpoint is the end of the zone's regulation chain and acts only while the zone
-# requests heat; zone 1's reads 65, its maximum, whenever the zone 1 room reads above 25.5 °C (ariston-zone-thermostats).
+# requests heat; zone 1's reads 65, its maximum, whenever the zone 1 room reads above 25.5 °C with a thermostat that wraps (docs/registers.md).
 m,ariston_z1,z1_heat_request,Heat request,,fe,2010,0c19,,s,IGN:12,,,,,s,UCH,0=off;1=on,
 r5,ariston_z1,z1_flow_temp_setpoint,Flow temperature setpoint,,3c,2001,6197,,s,UIN,10,°C,,,s,IGN:4
 # Read-back rows for the settings that reach Home Assistant only in the boiler's 30-minute dump (or never): unpolled,

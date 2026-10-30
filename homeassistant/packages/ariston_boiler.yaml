@@ -4,7 +4,7 @@
 # Reads from ebusd:    ebusd/ariston/winter_mode, auto_mode
 # Writes to ebusd:     ebusd/cmd/winter_mode/set, ebusd/cmd/auto_mode/set   (the write rows in configuration/ariston_cmd.csv)
 # Refresh from ebusd:  ebusd/<circuit>/<name>/get for every command          (the r rows in ariston.csv, ariston_zone*.csv)
-# Design: wiki specs/2026-10-14-ariston-controls. Needed by every ariston_* package.
+# Design: docs/design.md. Needed by every ariston_* package.
 mqtt:
   # Winter mode belongs to the whole boiler, not to a zone. The zone climates' off/heat mode writes the same register.
   switch:

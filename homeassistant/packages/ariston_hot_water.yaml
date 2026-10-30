@@ -2,7 +2,7 @@
 #
 # Reads from ebusd:  ebusd/ariston/dhw_status, sanitary_temp_comfort
 # Writes to ebusd:   ebusd/cmd/dhw_status/set, ebusd/cmd/sanitary_temp_comfort/set  (re-read by ariston_boiler.yaml)
-# Design: wiki specs/2026-10-14-ariston-controls. A switch and a number, not an MQTT water heater: that platform only
+# Design: docs/design.md. A switch and a number, not an MQTT water heater: that platform only
 # accepts the operation names off, eco, electric, gas, heat_pump, high_demand and performance, none of which means "on".
 mqtt:
   switch:

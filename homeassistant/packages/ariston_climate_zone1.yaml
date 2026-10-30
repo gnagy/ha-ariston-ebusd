@@ -4,10 +4,10 @@
 #                      z1_curve_offset, z1_curve_slope, z1_room_influence, z1_thermoreg_type
 # Writes to ebusd:     ebusd/cmd/winter_mode/set (the heating season is the boiler's, not the zone's),
 #                      ebusd/cmd/z1_day_temp/set, z1_curve_offset, z1_curve_slope, z1_room_influence, z1_thermoreg_type
-# Re-read after a set: the map in ariston_boiler.yaml. Design: wiki specs/2026-10-14-ariston-controls.
+# Re-read after a set: the map in ariston_boiler.yaml. Design: docs/design.md.
 #
 # The Z1 thermostat sends its room temperature as an 8-bit number in tenths of a degree, so it wraps at 25.6 degrees: a
-# room at 26.2 arrives as 0.6 (wiki ariston-zone-thermostats). Below 10 degrees a reading is therefore 25.6 too low.
+# room at 26.2 arrives as 0.6 (docs/registers.md). Below 10 degrees a reading is therefore 25.6 too low.
 # The boiler still sees the wrapped value; this only corrects what the tile shows.
 #
 # Optional: the correction is for a thermostat that wraps, as an older Ariston zone 1 thermostat did here. If yours

@@ -6,7 +6,7 @@
 Reads every *.csv in --csv (ebusd's configuration folder), every *.yaml in --packages (the folder holding the
 ariston_*.yaml packages) and the filter-circuit line of --cfg (mqtt-hassio.cfg). The paths are given, not assumed,
 so it runs on any layout. Prints one line per finding and exits 1 on any ERROR.
-Nothing is sent to the instance. Design: wiki specs/2026-10-14-ariston-controls.
+Nothing is sent to the instance. Design: docs/design.md.
 
   1  every command topic ebusd/<circuit>/<name>/set has a w row, and every w row in cmd has a user
   2  every other topic of an entity resolves to a readable row (m, u, b or r) or is ebusd/global/running
